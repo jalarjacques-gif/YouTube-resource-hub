@@ -1,0 +1,229 @@
+{
+  "admin": {
+    "passwordHash": "$2a$10$wT0X8rW6J.eO.t/kQ6lV7.Xl29M3pXpZ6sB9gKzJ5o4mN2q8bV6v6"
+  },
+  "settings": {
+    "siteTitle": "Creator Resource Hub",
+    "creatorName": "Alex Rivera",
+    "channelName": "@AlexRiveraTech",
+    "channelUrl": "https://youtube.com/@AlexRiveraTech",
+    "bio": "Free project code, cheat sheets, guides, and companion resources for all my YouTube tutorials.",
+    "avatarUrl": "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=256&h=256&q=80",
+    "bannerAnnouncement": "🎉 Welcome! All tutorial project files, PDFs, and ZIP downloads are 100% free.",
+    "socialLinks": [
+      {
+        "platform": "YouTube",
+        "url": "https://youtube.com"
+      },
+      {
+        "platform": "GitHub",
+        "url": "https://github.com"
+      },
+      {
+        "platform": "Discord",
+        "url": "https://discord.com"
+      },
+      {
+        "platform": "Twitter",
+        "url": "https://twitter.com"
+      }
+    ]
+  },
+  "monetization": {
+    "ads": {
+      "enabled": true,
+      "adSenseClientId": "",
+      "topBannerHtml": "",
+      "inFeedBannerHtml": "",
+      "modalBannerHtml": ""
+    },
+    "countdown": {
+      "enabled": true,
+      "seconds": 5,
+      "bannerMessage": "⚡ Sponsored Deal: Deploy servers in 60s with $200 free cloud credits!",
+      "bannerLink": "https://digitalocean.com"
+    },
+    "affiliates": [
+      {
+        "id": "aff-1",
+        "title": "Cloud Hosting & Fast Databases",
+        "description": "Recommended cloud hosting for all our backend web projects. Includes $200 free credits for 60 days.",
+        "badge": "FREE $200 CREDIT",
+        "link": "https://digitalocean.com",
+        "partner": "DigitalOcean",
+        "category": "Cloud Hosting"
+      },
+      {
+        "id": "aff-2",
+        "title": "Ultra-Fast VPN & Developer Privacy",
+        "description": "Protect your IP, encrypt connections, and access global developer APIs securely with 68% discount.",
+        "badge": "68% EXCLUSIVE OFF",
+        "link": "https://nordvpn.com",
+        "partner": "NordVPN",
+        "category": "Security"
+      },
+      {
+        "id": "aff-3",
+        "title": "Clean Developer Icons & UI Assets",
+        "description": "Over 10,000+ premium vector icons and Figma UI kits to speed up your frontend workflow.",
+        "badge": "POPULAR CHOICE",
+        "link": "https://figma.com",
+        "partner": "DesignKit",
+        "category": "Design Tools"
+      }
+    ],
+    "donations": {
+      "enabled": true,
+      "platform": "BuyMeACoffee",
+      "url": "https://buymeacoffee.com",
+      "label": "Buy Me a Coffee ☕",
+      "message": "All downloads & tutorial project files are 100% free! If this helped you build something awesome, feel free to support the channel."
+    }
+  },
+  "categories": [
+    "All",
+    "Python",
+    "Web Development",
+    "Cheatsheets",
+    "Full Projects",
+    "Design Assets"
+  ],
+  "videos": [
+    {
+      "id": "vid-1",
+      "slug": "full-stack-web-development-crash-course",
+      "youtubeUrl": "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
+      "youtubeId": "dQw4w9WgXcQ",
+      "thumbnailUrl": "https://images.unsplash.com/photo-1498050108023-c5249f4df085?auto=format&fit=crop&w=800&q=80",
+      "title": "Full-Stack Web Development Crash Course (HTML, CSS, React, Node.js)",
+      "description": "In this comprehensive 3-hour tutorial, we build a modern responsive web app from scratch. Download the full starter kit, cheatsheet PDF, and finished source code ZIP below.",
+      "category": "Web Development",
+      "tags": [
+        "React",
+        "NodeJS",
+        "JavaScript",
+        "FullStack"
+      ],
+      "publishedAt": "2026-10-15T10:00:00.000Z",
+      "isPublished": true,
+      "featured": true,
+      "views": 1420,
+      "resources": [
+        {
+          "id": "res-101",
+          "title": "Web Dev Roadmap & Cheatsheet 2026",
+          "type": "PDF",
+          "isExternal": true,
+          "url": "https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf",
+          "size": "2.4 MB",
+          "note": "Includes visual HTML/CSS/JS reference tables",
+          "downloads": 483
+        },
+        {
+          "id": "res-102",
+          "title": "Complete Starter Code Template",
+          "type": "ZIP",
+          "isExternal": true,
+          "url": "https://github.com",
+          "size": "14.8 MB",
+          "note": "Includes configs, mock data, and Tailwind template",
+          "downloads": 735
+        },
+        {
+          "id": "res-103",
+          "title": "GitHub Repository (Finished Source Code)",
+          "type": "LINK",
+          "isExternal": true,
+          "url": "https://github.com",
+          "size": "Cloud",
+          "note": "Clone directly with git or star the repo",
+          "downloads": 921
+        }
+      ]
+    },
+    {
+      "id": "vid-2",
+      "slug": "python-automation-scripting-masterclass",
+      "youtubeUrl": "https://www.youtube.com/watch?v=kqtD5dpn9C8",
+      "youtubeId": "kqtD5dpn9C8",
+      "thumbnailUrl": "https://images.unsplash.com/photo-1526374965328-7f61d4dc18c5?auto=format&fit=crop&w=800&q=80",
+      "title": "Python Automation Mastery: 5 Practical Scripts to Automate Your Work",
+      "description": "Learn how to scrape websites, automate email reports, organize files, and interact with APIs. All 5 complete scripts and setup instructions included in the download package.",
+      "category": "Python",
+      "tags": [
+        "Python",
+        "Automation",
+        "Scripts",
+        "Productivity"
+      ],
+      "publishedAt": "2026-10-10T14:30:00.000Z",
+      "isPublished": true,
+      "featured": false,
+      "views": 890,
+      "resources": [
+        {
+          "id": "res-201",
+          "title": "5 Python Automation Scripts Bundle",
+          "type": "ZIP",
+          "isExternal": true,
+          "url": "https://github.com",
+          "size": "5.1 MB",
+          "note": "Contains scripts 1-5 + requirements.txt",
+          "downloads": 312
+        },
+        {
+          "id": "res-202",
+          "title": "Python Libraries Cheat Sheet",
+          "type": "PDF",
+          "isExternal": true,
+          "url": "https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf",
+          "size": "1.8 MB",
+          "note": "Requests, BeautifulSoup, Pandas, and OS cheat sheet",
+          "downloads": 245
+        }
+      ]
+    },
+    {
+      "id": "vid-3",
+      "slug": "modern-ui-ux-design-assets-pack",
+      "youtubeUrl": "https://www.youtube.com/watch?v=JGwWNGJdvx8",
+      "youtubeId": "JGwWNGJdvx8",
+      "thumbnailUrl": "https://images.unsplash.com/photo-1507238691740-187a5b1d37b8?auto=format&fit=crop&w=800&q=80",
+      "title": "How to Design Clean Modern Web Interfaces (Free UI Kit Included)",
+      "description": "Step-by-step breakdown of color palettes, typography scales, layout grids, and interactive states. Download the free Figma components and vector icon pack.",
+      "category": "Design Assets",
+      "tags": [
+        "UI/UX",
+        "Figma",
+        "Design",
+        "CSS"
+      ],
+      "publishedAt": "2026-10-04T09:15:00.000Z",
+      "isPublished": true,
+      "featured": false,
+      "views": 670,
+      "resources": [
+        {
+          "id": "res-301",
+          "title": "Figma Design System & Components Pack",
+          "type": "LINK",
+          "isExternal": true,
+          "url": "https://figma.com",
+          "size": "Cloud",
+          "note": "Duplicate directly into your Figma workspace",
+          "downloads": 418
+        },
+        {
+          "id": "res-302",
+          "title": "Icons & SVG Asset Library",
+          "type": "ZIP",
+          "isExternal": true,
+          "url": "https://github.com",
+          "size": "8.7 MB",
+          "note": "Over 200+ scalable SVG vectors & icons",
+          "downloads": 560
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,22 @@
+{
+  "name": "yt-resource-hub",
+  "version": "1.0.0",
+  "description": "Creator Hub for YouTube Videos, PDFs, ZIP files, and resource downloads",
+  "main": "server.js",
+  "type": "module",
+  "scripts": {
+    "start": "node server.js",
+    "build": "npm --prefix client install && npm --prefix client run build",
+    "server": "node server.js",
+    "client": "npm --prefix client run dev"
+  },
+  "dependencies": {
+    "bcryptjs": "^2.4.3",
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.7",
+    "express": "^4.21.2",
+    "jsonwebtoken": "^9.0.2",
+    "multer": "^1.4.5-lts.1",
+    "uuid": "^11.1.0"
+  }
+}
