@@ -410,7 +410,7 @@ app.post('/api/videos/:id/view', (req, res) => {
 });
 
 // Serve frontend in production
-const CLIENT_DIST = path.join(__dirname, 'client', 'dist');
+const CLIENT_DIST = path.join(__dirname, 'dist');
 if (fs.existsSync(CLIENT_DIST)) {
   app.use(express.static(CLIENT_DIST));
   app.get('*', (req, res) => {
