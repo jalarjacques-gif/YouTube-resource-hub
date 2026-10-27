@@ -32,7 +32,7 @@
   "monetization": {
     "ads": {
       "enabled": true,
-      "adSenseClientId": "",
+      "adSenseClientId": "ca-pub-5411962273223486",
       "topBannerHtml": "",
       "inFeedBannerHtml": "",
       "modalBannerHtml": ""
