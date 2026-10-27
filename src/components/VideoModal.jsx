@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { X, ExternalLink, Share2, Check, Download, AlertCircle, Coffee } from 'lucide-react';
 import YoutubeIcon from './YoutubeIcon';
 import { getYouTubeEmbedUrl } from '../utils/youtube';
@@ -7,6 +7,14 @@ import AdBanner from './AdBanner';
 
 export default function VideoModal({ video, monetization, onClose, onStartDownload }) {
   const [copied, setCopied] = useState(false);
+  const containerRef = useRef(null);
+
+  // Scroll to top of modal whenever a video is selected so the player is always at the top of the screen
+  useEffect(() => {
+    if (containerRef.current) {
+      containerRef.current.scrollTop = 0;
+    }
+  }, [video]);
 
   if (!video) return null;
 
@@ -20,30 +28,34 @@ export default function VideoModal({ video, monetization, onClose, onStartDownlo
   };
 
   return (
-    <div className="fixed inset-0 z-50 overflow-y-auto bg-black/85 backdrop-blur-md flex items-center justify-center p-3 sm:p-4 md:p-6">
+    <div 
+      ref={containerRef}
+      className="fixed inset-0 z-50 overflow-y-auto bg-black/90 backdrop-blur-md flex justify-center items-start p-2 sm:p-4 md:p-6"
+      onClick={onClose}
+    >
       
       {/* Modal Dialog Card */}
       <div 
-        className="relative w-full max-w-4xl bg-slate-900 border border-slate-800 rounded-3xl overflow-hidden shadow-2xl shadow-rose-950/30 my-8 animate-in fade-in zoom-in-95 duration-200"
+        className="relative w-full max-w-4xl bg-slate-900 border border-slate-800 rounded-2xl sm:rounded-3xl overflow-hidden shadow-2xl shadow-rose-950/40 my-2 sm:my-6 animate-in fade-in zoom-in-95 duration-200"
         onClick={(e) => e.stopPropagation()}
       >
-        {/* Close Button */}
+        {/* Close Button with high contrast & always in view */}
         <button
           onClick={onClose}
-          className="absolute top-4 right-4 z-20 p-2 rounded-full bg-slate-950/80 text-slate-400 hover:text-white hover:bg-slate-800 backdrop-blur border border-slate-700/50 transition-colors cursor-pointer"
-          title="Close"
+          className="absolute top-3 right-3 z-30 p-2 sm:p-2.5 rounded-full bg-slate-950/85 text-slate-300 hover:text-white hover:bg-rose-600 backdrop-blur border border-slate-700/60 shadow-lg transition-all cursor-pointer"
+          title="Close Video"
         >
           <X className="w-5 h-5" />
         </button>
 
-        {/* Video Player Section */}
-        <div className="relative aspect-video w-full bg-black">
+        {/* Video Player Section - 100% visible in standard 16:9 ratio */}
+        <div className="relative aspect-video w-full bg-black shadow-inner">
           {video.youtubeId ? (
             <iframe
               src={embedUrl}
               title={video.title}
-              className="w-full h-full border-0"
-              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+              className="w-full h-full border-0 block"
+              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
               allowFullScreen
             />
           ) : (
@@ -54,7 +66,7 @@ export default function VideoModal({ video, monetization, onClose, onStartDownlo
         </div>
 
         {/* Content Section */}
-        <div className="p-6 sm:p-8 space-y-6">
+        <div className="p-5 sm:p-7 md:p-8 space-y-6">
 
           {/* Title & Metadata Header */}
           <div>
@@ -69,7 +81,7 @@ export default function VideoModal({ video, monetization, onClose, onStartDownlo
               )}
             </div>
 
-            <h1 className="text-xl sm:text-2xl md:text-3xl font-extrabold text-white tracking-tight leading-tight">
+            <h1 className="text-lg sm:text-2xl md:text-3xl font-extrabold text-white tracking-tight leading-tight">
               {video.title}
             </h1>
 
