@@ -659,7 +659,26 @@ export default function AdminPage() {
 
                   <div>
                     <label className="block text-xs font-semibold text-slate-300 uppercase mb-1">
-                      Top Header Banner (HTML or AdSense Script)
+                      Google AdSense Publisher ID (e.g. ca-pub-1234567890123456)
+                    </label>
+                    <input
+                      type="text"
+                      placeholder="ca-pub-XXXXXXXXXXXXXXXX"
+                      value={monetizationForm.ads?.adSenseClientId || ''}
+                      onChange={(e) => setMonetizationForm({
+                        ...monetizationForm,
+                        ads: { ...monetizationForm.ads, adSenseClientId: e.target.value }
+                      })}
+                      className="w-full bg-slate-900 border border-slate-800 rounded-xl px-4 py-2 font-mono text-xs text-slate-200 focus:outline-none focus:border-rose-500"
+                    />
+                    <p className="text-[11px] text-slate-500 mt-1">
+                      Enables official Google AdSense script verification and Google Auto Ads automatically across your site.
+                    </p>
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-semibold text-slate-300 uppercase mb-1">
+                      Top Header Banner Ad Unit (HTML or AdSense Snippet)
                     </label>
                     <textarea
                       rows={2}
@@ -668,6 +687,22 @@ export default function AdminPage() {
                       onChange={(e) => setMonetizationForm({
                         ...monetizationForm,
                         ads: { ...monetizationForm.ads, topBannerHtml: e.target.value }
+                      })}
+                      className="w-full bg-slate-900 border border-slate-800 rounded-xl px-4 py-2 font-mono text-xs text-slate-200 focus:outline-none focus:border-rose-500"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-semibold text-slate-300 uppercase mb-1">
+                      In-Modal Ad Unit (Shown inside video tutorial popup)
+                    </label>
+                    <textarea
+                      rows={2}
+                      placeholder="Paste second AdSense unit snippet or affiliate banner for inside the video popup."
+                      value={monetizationForm.ads?.modalBannerHtml || ''}
+                      onChange={(e) => setMonetizationForm({
+                        ...monetizationForm,
+                        ads: { ...monetizationForm.ads, modalBannerHtml: e.target.value }
                       })}
                       className="w-full bg-slate-900 border border-slate-800 rounded-xl px-4 py-2 font-mono text-xs text-slate-200 focus:outline-none focus:border-rose-500"
                     />

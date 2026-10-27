@@ -31,6 +31,22 @@ export default function App() {
     video: null
   });
 
+  // Dynamically load Google AdSense script when Client ID is configured
+  useEffect(() => {
+    const clientId = monetization?.ads?.adSenseClientId?.trim();
+    if (monetization?.ads?.enabled && clientId) {
+      const existing = document.getElementById('google-adsense-script');
+      if (!existing) {
+        const script = document.createElement('script');
+        script.id = 'google-adsense-script';
+        script.async = true;
+        script.src = `https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=${clientId}`;
+        script.crossOrigin = 'anonymous';
+        document.head.appendChild(script);
+      }
+    }
+  }, [monetization]);
+
   // Listen to popstate (browser back/forward button)
   useEffect(() => {
     const handlePopState = () => {
