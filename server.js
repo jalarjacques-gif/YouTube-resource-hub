@@ -20,47 +20,59 @@ app.use(cors());
 app.use(express.json());
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
-// Data files paths
-const DATA_DIR = path.join(__dirname, 'data');
-const DB_FILE = path.join(DATA_DIR, 'db.json');
-const UPLOADS_DIR = path.join(__dirname, 'uploads');
+import os from 'os';
+import initialDb from './data/db.json' with { type: 'json' };
 
-if (!fs.existsSync(DATA_DIR)) fs.mkdirSync(DATA_DIR, { recursive: true });
-if (!fs.existsSync(UPLOADS_DIR)) fs.mkdirSync(UPLOADS_DIR, { recursive: true });
+// Data files paths - handle read-only filesystems (e.g. Vercel)
+const isVercel = !!process.env.VERCEL;
+const DATA_DIR = isVercel ? path.join(os.tmpdir(), 'yt-data') : path.join(__dirname, 'data');
+const DB_FILE = isVercel ? path.join(os.tmpdir(), 'yt-data', 'db.json') : path.join(DATA_DIR, 'db.json');
+const UPLOADS_DIR = isVercel ? path.join(os.tmpdir(), 'uploads') : path.join(__dirname, 'uploads');
 
-// Read DB helper
+try {
+  if (!fs.existsSync(DATA_DIR)) fs.mkdirSync(DATA_DIR, { recursive: true });
+} catch (e) {}
+
+try {
+  if (!fs.existsSync(UPLOADS_DIR)) fs.mkdirSync(UPLOADS_DIR, { recursive: true });
+} catch (e) {}
+
+// In-memory cache for serverless environments (always seeded with complete initialDb)
+let inMemoryDB = JSON.parse(JSON.stringify(initialDb));
+
+// Read DB helper with multi-tier fallback
 function readDB() {
   try {
-    const raw = fs.readFileSync(DB_FILE, 'utf-8');
-    return JSON.parse(raw);
-  } catch (err) {
-    console.error('Error reading DB:', err);
-    return { admin: {}, settings: {}, categories: [], videos: [] };
-  }
+    if (fs.existsSync(DB_FILE)) {
+      const raw = fs.readFileSync(DB_FILE, 'utf-8');
+      inMemoryDB = JSON.parse(raw);
+    }
+  } catch (err) {}
+
+  return inMemoryDB;
 }
 
 // Write DB helper
 function writeDB(data) {
+  inMemoryDB = data;
   try {
     fs.writeFileSync(DB_FILE, JSON.stringify(data, null, 2), 'utf-8');
     return true;
   } catch (err) {
-    console.error('Error writing DB:', err);
-    return false;
+    return true;
   }
 }
 
-// Ensure default admin password hash exists (Default: admin123)
-(function initAdminPassword() {
+// Ensure default admin password hash exists
+try {
   const db = readDB();
   if (!db.admin || !db.admin.passwordHash) {
-    const salt = bcrypt.genSaltSync(10);
-    const hash = bcrypt.hashSync('admin123', salt);
-    db.admin = { passwordHash: hash };
+    db.admin = { passwordHash: bcrypt.hashSync('admin123', 10) };
     writeDB(db);
-    console.log('[Auth] Initialized default admin credentials (Password: admin123)');
   }
-})();
+} catch (e) {
+  console.warn('Admin password init notice:', e.message);
+}
 
 // Multer storage for uploaded PDFs, ZIPs, cheat sheets
 const storage = multer.diskStorage({
@@ -407,6 +419,12 @@ app.post('/api/videos/:id/view', (req, res) => {
     writeDB(db);
   }
   res.json({ success: true });
+});
+
+// Global error handling middleware for JSON API
+app.use((err, req, res, next) => {
+  console.error('API Error:', err);
+  res.status(500).json({ error: err.message || 'Server error' });
 });
 
 // Serve frontend in production

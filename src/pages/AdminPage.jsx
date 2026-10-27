@@ -95,8 +95,13 @@ export default function AdminPage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ password: passwordInput })
       });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || 'Login failed');
+      let data;
+      try {
+        data = await res.json();
+      } catch (jsonErr) {
+        throw new Error('Server starting up or returned an invalid response. Please try again in a few seconds.');
+      }
+      if (!res.ok) throw new Error(data?.error || 'Login failed');
 
       localStorage.setItem('yt_hub_token', data.token);
       setToken(data.token);
