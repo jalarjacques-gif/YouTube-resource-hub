@@ -207,10 +207,10 @@ function extractYouTubeId(url) {
 function authenticateToken(req, res, next) {
   const authHeader = req.headers['authorization'];
   const token = authHeader && authHeader.split(' ')[1];
-  if (!token) return res.status(401).json({ error: 'Authentication token required' });
+  if (!token) return res.status(401).json({ error: 'Authentication token required. Please log in.' });
 
   jwt.verify(token, JWT_SECRET, (err, user) => {
-    if (err) return res.status(403).json({ error: 'Invalid or expired token' });
+    if (err) return res.status(403).json({ error: 'Session expired. Please log in again.' });
     req.user = user;
     next();
   });
@@ -221,6 +221,11 @@ function authenticateToken(req, res, next) {
 // 1. Health check
 app.get('/api/health', (req, res) => {
   res.json({ status: 'ok', time: new Date().toISOString() });
+});
+
+// Auth: Verify session token
+app.get('/api/auth/verify', authenticateToken, (req, res) => {
+  res.json({ valid: true, user: req.user });
 });
 
 // 2. Auth: Login
@@ -236,7 +241,7 @@ app.post('/api/auth/login', (req, res) => {
     return res.status(401).json({ error: 'Incorrect admin password' });
   }
 
-  const token = jwt.sign({ role: 'admin' }, JWT_SECRET, { expiresIn: '7d' });
+  const token = jwt.sign({ role: 'admin' }, JWT_SECRET, { expiresIn: '30d' });
   res.json({ token, message: 'Logged in successfully' });
 });
 

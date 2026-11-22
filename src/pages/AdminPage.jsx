@@ -102,7 +102,22 @@ export default function AdminPage() {
 
   useEffect(() => {
     if (token) {
-      loadData(token);
+      // Verify active session with server
+      fetch('/api/auth/verify', {
+        headers: { 'Authorization': `Bearer ${token}` }
+      })
+        .then(res => {
+          if (!res.ok) {
+            // Token is expired or invalid - clear stale session
+            localStorage.removeItem('yt_hub_token');
+            setToken('');
+          } else {
+            loadData(token);
+          }
+        })
+        .catch(() => {
+          loadData(token);
+        });
     }
   }, [token]);
 
@@ -302,7 +317,18 @@ export default function AdminPage() {
         body: JSON.stringify({ settings: settingsForm, categories: newCats })
       });
 
-      if (!res.ok) throw new Error('Failed to save settings');
+      if (res.status === 401 || res.status === 403) {
+        localStorage.removeItem('yt_hub_token');
+        setToken('');
+        alert('Your admin session has expired. Please log in with your admin password to save changes.');
+        return;
+      }
+
+      if (!res.ok) {
+        const errJson = await res.json().catch(() => ({}));
+        throw new Error(errJson.error || 'Failed to save settings');
+      }
+
       const data = await res.json();
       setSettings(data.settings);
       setCategories(data.categories);
@@ -326,7 +352,18 @@ export default function AdminPage() {
         body: JSON.stringify({ monetization: monetizationForm })
       });
 
-      if (!res.ok) throw new Error('Failed to save monetization settings');
+      if (res.status === 401 || res.status === 403) {
+        localStorage.removeItem('yt_hub_token');
+        setToken('');
+        alert('Your admin session has expired. Please log in with your admin password to save changes.');
+        return;
+      }
+
+      if (!res.ok) {
+        const errJson = await res.json().catch(() => ({}));
+        throw new Error(errJson.error || 'Failed to save monetization settings');
+      }
+
       const data = await res.json();
       setMonetization(data.monetization);
       setMonetizationSuccess(true);
@@ -374,6 +411,13 @@ export default function AdminPage() {
         },
         body: JSON.stringify({ currentPassword: pwdCurrent, newPassword: pwdNew })
       });
+
+      if (res.status === 401 || res.status === 403) {
+        localStorage.removeItem('yt_hub_token');
+        setToken('');
+        alert('Your admin session has expired. Please log in with your admin password.');
+        return;
+      }
 
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || 'Password update failed');
