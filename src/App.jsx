@@ -18,7 +18,7 @@ import AboutPage from './pages/AboutPage';
 import ContactPage from './pages/ContactPage';
 import DisclaimerPage from './pages/DisclaimerPage';
 
-import { Video, Search } from 'lucide-react';
+import { Video, Search, Sparkles } from 'lucide-react';
 
 export default function App() {
   const [currentPath, setCurrentPath] = useState(() => window.location.pathname);
