@@ -236,7 +236,18 @@ export default function AdminPage() {
         body: JSON.stringify(formData)
       });
 
-      if (!res.ok) throw new Error('Failed to save video');
+      if (res.status === 401 || res.status === 403) {
+        localStorage.removeItem('yt_hub_token');
+        setToken('');
+        alert('Your admin session expired. Please log in again.');
+        return;
+      }
+
+      if (!res.ok) {
+        const errJson = await res.json().catch(() => ({}));
+        throw new Error(errJson.error || 'Failed to save video');
+      }
+
       setEditingVideo(null);
       setActiveTab('videos');
       await loadData();
@@ -248,14 +259,30 @@ export default function AdminPage() {
   // Delete Video
   const handleDeleteVideo = async (videoId) => {
     try {
+      // Optimistically remove from state so the user sees immediate feedback
+      setVideos((prev) => prev.filter((v) => v.id !== videoId));
+
       const res = await fetch(`/api/videos/${videoId}`, {
         method: 'DELETE',
         headers: { 'Authorization': `Bearer ${token}` }
       });
-      if (!res.ok) throw new Error('Failed to delete video');
+
+      if (res.status === 401 || res.status === 403) {
+        localStorage.removeItem('yt_hub_token');
+        setToken('');
+        alert('Your admin session expired. Please log in again.');
+        return;
+      }
+
+      if (!res.ok && res.status !== 404) {
+        const errJson = await res.json().catch(() => ({}));
+        throw new Error(errJson.error || 'Failed to delete video');
+      }
+
       await loadData();
     } catch (err) {
       alert(err.message);
+      await loadData();
     }
   };
 

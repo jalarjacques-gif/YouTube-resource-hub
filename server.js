@@ -427,7 +427,39 @@ app.post('/api/videos', authenticateToken, (req, res) => {
 app.put('/api/videos/:id', authenticateToken, (req, res) => {
   const db = readDB();
   const index = (db.videos || []).findIndex(v => v.id === req.params.id);
-  if (index === -1) return res.status(404).json({ error: 'Video not found' });
+
+  if (index === -1) {
+    // Upsert video if missing from current memory
+    const ytId = extractYouTubeId(req.body.youtubeUrl);
+    const newVideo = {
+      id: req.params.id,
+      slug: `video-${Date.now()}`,
+      title: req.body.title || 'Untitled Tutorial',
+      youtubeUrl: req.body.youtubeUrl || '',
+      youtubeId: ytId,
+      thumbnailUrl: req.body.thumbnailUrl || (ytId ? `https://img.youtube.com/vi/${ytId}/maxresdefault.jpg` : ''),
+      description: req.body.description || '',
+      category: req.body.category || 'Tutorials',
+      tags: Array.isArray(req.body.tags) ? req.body.tags : [],
+      publishedAt: new Date().toISOString(),
+      isPublished: req.body.isPublished !== false,
+      featured: !!req.body.featured,
+      views: 0,
+      resources: (req.body.resources || []).map(r => ({
+        id: r.id || `res-${Date.now()}-${Math.floor(Math.random() * 1000)}`,
+        title: r.title || 'Resource',
+        type: r.type || 'FILE',
+        isExternal: !!r.isExternal,
+        url: r.url || '',
+        size: r.size || 'Direct Link',
+        note: r.note || '',
+        downloads: r.downloads || 0
+      }))
+    };
+    db.videos.unshift(newVideo);
+    writeDB(db);
+    return res.json(newVideo);
+  }
 
   const existing = db.videos[index];
   const { title, youtubeUrl, description, category, tags, thumbnailUrl, resources, isPublished, featured } = req.body;
@@ -468,7 +500,10 @@ app.put('/api/videos/:id', authenticateToken, (req, res) => {
 app.delete('/api/videos/:id', authenticateToken, (req, res) => {
   const db = readDB();
   const index = (db.videos || []).findIndex(v => v.id === req.params.id);
-  if (index === -1) return res.status(404).json({ error: 'Video not found' });
+  if (index === -1) {
+    // Idempotent: video is already deleted or not in database
+    return res.json({ message: 'Video already removed', deletedId: req.params.id });
+  }
 
   const removed = db.videos.splice(index, 1)[0];
   writeDB(db);
