@@ -5,15 +5,23 @@ import VideoCard from './components/VideoCard';
 import VideoModal from './components/VideoModal';
 import DownloadCountdownModal from './components/DownloadCountdownModal';
 import AffiliateSection from './components/AffiliateSection';
+import FaqSection from './components/FaqSection';
+import CookieBanner from './components/CookieBanner';
 import AdBanner from './components/AdBanner';
 import Footer from './components/Footer';
+
+// Pages
 import AdminPage from './pages/AdminPage';
+import PrivacyPolicyPage from './pages/PrivacyPolicyPage';
+import TermsPage from './pages/TermsPage';
+import AboutPage from './pages/AboutPage';
+import ContactPage from './pages/ContactPage';
+import DisclaimerPage from './pages/DisclaimerPage';
+
 import { Video, Search } from 'lucide-react';
 
 export default function App() {
-  const [isAdminRoute, setIsAdminRoute] = useState(
-    () => window.location.pathname === '/admin' || window.location.pathname.startsWith('/admin')
-  );
+  const [currentPath, setCurrentPath] = useState(() => window.location.pathname);
 
   const [videos, setVideos] = useState([]);
   const [settings, setSettings] = useState(null);
@@ -30,6 +38,13 @@ export default function App() {
     resource: null,
     video: null
   });
+
+  // Client-side Navigation helper
+  const handleNavigate = (path) => {
+    window.history.pushState({}, '', path);
+    setCurrentPath(path);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
 
   // Dynamically load Google AdSense script when Client ID is configured
   useEffect(() => {
@@ -50,7 +65,7 @@ export default function App() {
   // Listen to popstate (browser back/forward button)
   useEffect(() => {
     const handlePopState = () => {
-      setIsAdminRoute(window.location.pathname === '/admin' || window.location.pathname.startsWith('/admin'));
+      setCurrentPath(window.location.pathname);
     };
     window.addEventListener('popstate', handlePopState);
     return () => window.removeEventListener('popstate', handlePopState);
@@ -88,15 +103,21 @@ export default function App() {
   };
 
   useEffect(() => {
-    if (!isAdminRoute) {
+    if (currentPath === '/' || currentPath === '') {
       fetchData();
+    } else {
+      // Also fetch settings on other pages so Navbar/Footer have branding
+      if (!settings) {
+        fetch('/api/settings')
+          .then((r) => r.json())
+          .then((data) => {
+            setSettings(data.settings || {});
+            setMonetization(data.monetization || null);
+          })
+          .catch(() => {});
+      }
     }
-  }, [isAdminRoute]);
-
-  // If on /admin route: render dedicated Admin Dashboard page
-  if (isAdminRoute) {
-    return <AdminPage />;
-  }
+  }, [currentPath]);
 
   // Handle opening download countdown modal
   const handleStartDownload = (resource, video) => {
@@ -107,7 +128,27 @@ export default function App() {
     });
   };
 
-  // Public Viewer Portal
+  // ROUTING DISPATCHER
+  if (currentPath === '/admin' || currentPath.startsWith('/admin')) {
+    return <AdminPage />;
+  }
+  if (currentPath === '/privacy-policy') {
+    return <PrivacyPolicyPage settings={settings} monetization={monetization} onNavigate={handleNavigate} />;
+  }
+  if (currentPath === '/terms-of-service') {
+    return <TermsPage settings={settings} monetization={monetization} onNavigate={handleNavigate} />;
+  }
+  if (currentPath === '/about') {
+    return <AboutPage settings={settings} monetization={monetization} onNavigate={handleNavigate} />;
+  }
+  if (currentPath === '/contact') {
+    return <ContactPage settings={settings} monetization={monetization} onNavigate={handleNavigate} />;
+  }
+  if (currentPath === '/disclaimer') {
+    return <DisclaimerPage settings={settings} monetization={monetization} onNavigate={handleNavigate} />;
+  }
+
+  // MAIN PUBLIC VIEWER PORTAL (HOME)
   const filteredVideos = videos.filter((vid) => {
     const matchesCategory = selectedCategory === 'All' || vid.category?.toLowerCase() === selectedCategory.toLowerCase();
     const q = searchQuery.toLowerCase().trim();
@@ -126,12 +167,13 @@ export default function App() {
   return (
     <div className="min-h-screen flex flex-col bg-slate-950 text-slate-100 selection:bg-rose-500 selection:text-white">
       
-      {/* Navigation (100% Public - Features Buy Me a Coffee if enabled) */}
+      {/* Navigation */}
       <Navbar
         settings={settings}
         monetization={monetization}
         searchQuery={searchQuery}
         setSearchQuery={setSearchQuery}
+        onNavigate={handleNavigate}
       />
 
       {/* Hero Banner with Categories & Channel Intro */}
@@ -224,6 +266,9 @@ export default function App() {
         {/* AFFILIATE RECOMMENDATIONS SECTION */}
         <AffiliateSection affiliates={monetization?.affiliates} />
 
+        {/* COMPREHENSIVE FAQ & LEARNING RESOURCE GUIDE (Essential for Google AdSense Quality Criteria) */}
+        <FaqSection />
+
       </main>
 
       {/* Video Modal (Viewer Experience for Watching & Accessing Downloads) */}
@@ -250,12 +295,15 @@ export default function App() {
         countdownSettings={monetization?.countdown}
         donationSettings={monetization?.donations}
         onDownloadTriggered={() => {
-          fetchData(); // updates counters
+          fetchData();
         }}
       />
 
-      {/* Public Footer */}
-      <Footer settings={settings} />
+      {/* Cookie Consent Banner (GDPR & Google EU Consent Policy Compliant) */}
+      <CookieBanner onNavigate={handleNavigate} />
+
+      {/* Public Footer with Comprehensive Legal & Navigation Links */}
+      <Footer settings={settings} onNavigate={handleNavigate} />
 
     </div>
   );
