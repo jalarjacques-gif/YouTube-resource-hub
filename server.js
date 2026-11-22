@@ -40,6 +40,90 @@ try {
 // In-memory cache for serverless environments (always seeded with complete initialDb)
 let inMemoryDB = JSON.parse(JSON.stringify(initialDb));
 
+// Upstash / Vercel KV REST configuration
+const kvUrl = process.env.KV_REST_API_URL || process.env.UPSTASH_REDIS_REST_URL;
+const kvToken = process.env.KV_REST_API_TOKEN || process.env.UPSTASH_REDIS_REST_TOKEN;
+
+async function syncToKV(data) {
+  if (!kvUrl || !kvToken) return false;
+  try {
+    await fetch(`${kvUrl}/set/jacquestech_db`, {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${kvToken}` },
+      body: JSON.stringify(data)
+    });
+    return true;
+  } catch (err) {
+    return false;
+  }
+}
+
+async function loadFromKV() {
+  if (!kvUrl || !kvToken) return null;
+  try {
+    const res = await fetch(`${kvUrl}/get/jacquestech_db`, {
+      headers: { Authorization: `Bearer ${kvToken}` }
+    });
+    if (res.ok) {
+      const json = await res.json();
+      if (json.result) {
+        return typeof json.result === 'string' ? JSON.parse(json.result) : json.result;
+      }
+    }
+  } catch (err) {}
+  return null;
+}
+
+// GitHub Auto-Sync helper (commits updates to data/db.json in GitHub repo)
+async function syncToGitHub(data) {
+  const repo = data?.settings?.storageConfig?.githubRepo || process.env.GITHUB_REPO || 'jalarjacques-gif/YouTube-resource-hub';
+  const token = data?.settings?.storageConfig?.githubToken || process.env.GITHUB_TOKEN;
+  if (!token) return { success: false, reason: 'No GitHub token configured' };
+
+  try {
+    const filePath = 'data/db.json';
+    const getUrl = `https://api.github.com/repos/${repo}/contents/${filePath}`;
+    const headers = {
+      'Authorization': `Bearer ${token}`,
+      'Accept': 'application/vnd.github.v3+json',
+      'User-Agent': 'jacquestech-app'
+    };
+
+    let sha = null;
+    try {
+      const getRes = await fetch(getUrl, { headers });
+      if (getRes.ok) {
+        const getJson = await getRes.json();
+        sha = getJson.sha;
+      }
+    } catch (e) {}
+
+    const cleanData = JSON.parse(JSON.stringify(data));
+    const contentBase64 = Buffer.from(JSON.stringify(cleanData, null, 2), 'utf-8').toString('base64');
+
+    const putRes = await fetch(getUrl, {
+      method: 'PUT',
+      headers: { ...headers, 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        message: 'Update content via JacquesTech Admin [skip ci]',
+        content: contentBase64,
+        sha: sha || undefined,
+        branch: 'main'
+      })
+    });
+
+    if (putRes.ok) {
+      const putJson = await putRes.json();
+      return { success: true, commitUrl: putJson.commit?.html_url };
+    } else {
+      const errText = await putRes.text();
+      return { success: false, reason: `GitHub error ${putRes.status}: ${errText}` };
+    }
+  } catch (err) {
+    return { success: false, reason: err.message };
+  }
+}
+
 // Read DB helper with multi-tier fallback
 function readDB() {
   try {
@@ -57,10 +141,20 @@ function writeDB(data) {
   inMemoryDB = data;
   try {
     fs.writeFileSync(DB_FILE, JSON.stringify(data, null, 2), 'utf-8');
-    return true;
-  } catch (err) {
-    return true;
+  } catch (err) {}
+
+  // Async cloud sync to Vercel KV if configured
+  if (kvUrl && kvToken) {
+    syncToKV(data).catch(() => {});
   }
+
+  // Async cloud sync to GitHub if configured
+  const ghToken = data?.settings?.storageConfig?.githubToken || process.env.GITHUB_TOKEN;
+  if (ghToken) {
+    syncToGitHub(data).catch(() => {});
+  }
+
+  return true;
 }
 
 // Ensure default admin password hash exists
@@ -419,6 +513,70 @@ app.post('/api/videos/:id/view', (req, res) => {
     writeDB(db);
   }
   res.json({ success: true });
+});
+
+// 8. Storage & Cloud Sync Endpoints
+app.get('/api/admin/storage-status', authenticateToken, (req, res) => {
+  const db = readDB();
+  const hasKV = !!(kvUrl && kvToken);
+  const hasGitHub = !!(db.settings?.storageConfig?.githubToken || process.env.GITHUB_TOKEN);
+  const repo = db.settings?.storageConfig?.githubRepo || process.env.GITHUB_REPO || 'jalarjacques-gif/YouTube-resource-hub';
+
+  res.json({
+    hasKV,
+    hasGitHub,
+    repo,
+    isVercel,
+    storageMode: hasKV ? 'Vercel KV (Realtime)' : (hasGitHub ? 'GitHub Auto-Sync (Permanent Cloud)' : 'Serverless Local')
+  });
+});
+
+app.post('/api/admin/sync-github', authenticateToken, async (req, res) => {
+  const db = readDB();
+  const token = req.body.token || db.settings?.storageConfig?.githubToken || process.env.GITHUB_TOKEN;
+  const repo = req.body.repo || db.settings?.storageConfig?.githubRepo || process.env.GITHUB_REPO || 'jalarjacques-gif/YouTube-resource-hub';
+
+  if (!token) {
+    return res.status(400).json({ error: 'Please provide a GitHub Personal Access Token' });
+  }
+
+  if (!db.settings.storageConfig) db.settings.storageConfig = {};
+  db.settings.storageConfig.githubToken = token;
+  db.settings.storageConfig.githubRepo = repo;
+
+  const result = await syncToGitHub(db);
+  if (result.success) {
+    writeDB(db);
+    res.json({ message: 'Database successfully synced to GitHub!', commitUrl: result.commitUrl });
+  } else {
+    res.status(500).json({ error: result.reason || 'Failed to sync with GitHub' });
+  }
+});
+
+app.get('/api/admin/export-db', authenticateToken, (req, res) => {
+  const db = readDB();
+  res.setHeader('Content-Type', 'application/json');
+  res.setHeader('Content-Disposition', 'attachment; filename="jacquestech-db.json"');
+  res.send(JSON.stringify(db, null, 2));
+});
+
+app.post('/api/admin/import-db', authenticateToken, (req, res) => {
+  try {
+    const incoming = req.body;
+    if (!incoming || typeof incoming !== 'object') {
+      return res.status(400).json({ error: 'Invalid JSON payload' });
+    }
+    const current = readDB();
+    const updated = {
+      ...current,
+      ...incoming,
+      admin: incoming.admin || current.admin
+    };
+    writeDB(updated);
+    res.json({ message: 'Database imported successfully' });
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to import: ' + err.message });
+  }
 });
 
 // Global error handling middleware for JSON API

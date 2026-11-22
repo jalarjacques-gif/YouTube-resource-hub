@@ -25,10 +25,10 @@ export default function Navbar({ settings, monetization, searchQuery, setSearchQ
             </div>
             <div>
               <div className="font-bold text-white tracking-tight flex items-center gap-1.5 leading-none">
-                {settings?.siteTitle || 'Creator Hub'}
+                {settings?.siteTitle || 'jacquestech'}
                 <span className="text-[10px] font-mono uppercase bg-rose-500/20 text-rose-400 border border-rose-500/30 px-1.5 py-0.5 rounded">Free Downloads</span>
               </div>
-              <p className="text-xs text-slate-400 mt-1 font-medium">{settings?.channelName || '@Creator'}</p>
+              <p className="text-xs text-slate-400 mt-1 font-medium">{settings?.channelName || '@jacquestech'}</p>
             </div>
           </button>
 

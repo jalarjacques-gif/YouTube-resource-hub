@@ -2,7 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { 
   ShieldCheck, Lock, LogOut, Video, Plus, Settings, Key, Trash2, 
   Edit, Eye, Download, Check, AlertCircle, ArrowLeft, ExternalLink,
-  Layers, HardDrive, BarChart3, DollarSign, Sparkles, Coffee, Clock, Tag
+  Layers, HardDrive, BarChart3, DollarSign, Sparkles, Coffee, Clock, Tag,
+  Cloud, Database, GitBranch, RefreshCw, Upload, CheckCircle, AlertTriangle
 } from 'lucide-react';
 import AdminVideoForm from '../components/AdminVideoForm';
 
@@ -12,7 +13,12 @@ export default function AdminPage() {
   const [loginError, setLoginError] = useState('');
   const [loginLoading, setLoginLoading] = useState(false);
 
-  const [activeTab, setActiveTab] = useState('videos'); // 'videos', 'add', 'monetization', 'settings', 'security'
+  const [activeTab, setActiveTab] = useState('videos'); // 'videos', 'add', 'monetization', 'settings', 'storage', 'security'
+  const [storageStatus, setStorageStatus] = useState({ hasKV: false, hasGitHub: false, repo: 'jalarjacques-gif/YouTube-resource-hub', storageMode: '' });
+  const [githubTokenInput, setGithubTokenInput] = useState('');
+  const [githubRepoInput, setGithubRepoInput] = useState('jalarjacques-gif/YouTube-resource-hub');
+  const [syncLoading, setSyncLoading] = useState(false);
+  const [syncMsg, setSyncMsg] = useState({ text: '', type: '' });
   const [videos, setVideos] = useState([]);
   const [settings, setSettings] = useState({});
   const [monetization, setMonetization] = useState({
@@ -70,6 +76,23 @@ export default function AdminPage() {
       }
       setCategories(sData.categories || []);
       setCategoriesInput((sData.categories || []).join(', '));
+
+      if (sData.settings?.storageConfig?.githubToken) {
+        setGithubTokenInput(sData.settings.storageConfig.githubToken);
+      }
+      if (sData.settings?.storageConfig?.githubRepo) {
+        setGithubRepoInput(sData.settings.storageConfig.githubRepo);
+      }
+
+      fetch('/api/admin/storage-status', { headers: { 'Authorization': `Bearer ${authToken}` } })
+        .then(r => r.json())
+        .then(st => {
+          if (st) {
+            setStorageStatus(st);
+            if (st.repo) setGithubRepoInput(st.repo);
+          }
+        })
+        .catch(() => {});
     } catch (err) {
       console.error(err);
     } finally {
@@ -82,6 +105,83 @@ export default function AdminPage() {
       loadData(token);
     }
   }, [token]);
+
+  // Handle GitHub Sync
+  const handleSyncGitHub = async (e) => {
+    e?.preventDefault();
+    if (!githubTokenInput) {
+      setSyncMsg({ text: 'Please enter a GitHub Personal Access Token', type: 'error' });
+      return;
+    }
+    setSyncLoading(true);
+    setSyncMsg({ text: '', type: '' });
+    try {
+      const res = await fetch('/api/admin/sync-github', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({ token: githubTokenInput, repo: githubRepoInput })
+      });
+      const data = await res.json();
+      if (res.ok) {
+        setSyncMsg({ text: data.message || 'Successfully committed database to GitHub!', type: 'success' });
+        await loadData(token);
+      } else {
+        setSyncMsg({ text: data.error || 'Failed to sync with GitHub', type: 'error' });
+      }
+    } catch (err) {
+      setSyncMsg({ text: err.message, type: 'error' });
+    } finally {
+      setSyncLoading(false);
+    }
+  };
+
+  // Handle Export DB
+  const handleExportDB = () => {
+    fetch('/api/admin/export-db', {
+      headers: { 'Authorization': `Bearer ${token}` }
+    })
+      .then(res => res.blob())
+      .then(blob => {
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'jacquestech-db.json';
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+      })
+      .catch(err => alert('Export failed: ' + err.message));
+  };
+
+  // Handle Import DB
+  const handleImportDB = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    try {
+      const text = await file.text();
+      const parsed = JSON.parse(text);
+      const res = await fetch('/api/admin/import-db', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify(parsed)
+      });
+      const data = await res.json();
+      if (res.ok) {
+        alert('Database successfully imported!');
+        await loadData(token);
+      } else {
+        alert(data.error || 'Failed to import database');
+      }
+    } catch (err) {
+      alert('Invalid JSON file: ' + err.message);
+    }
+  };
 
   // Handle Login
   const handleLoginSubmit = async (e) => {
@@ -473,6 +573,18 @@ export default function AdminPage() {
             >
               <Settings className="w-4 h-4" />
               <span>Branding & Settings</span>
+            </button>
+
+            <button
+              onClick={() => { setActiveTab('storage'); setEditingVideo(null); }}
+              className={`py-3.5 px-4 text-xs font-bold border-b-2 flex items-center gap-2 transition-all cursor-pointer whitespace-nowrap ${
+                activeTab === 'storage'
+                  ? 'border-rose-500 text-rose-400'
+                  : 'border-transparent text-slate-400 hover:text-slate-200'
+              }`}
+            >
+              <Cloud className="w-4 h-4 text-sky-400" />
+              <span>Cloud Storage & Sync</span>
             </button>
 
             <button
@@ -1069,6 +1181,173 @@ export default function AdminPage() {
                   </button>
                 </div>
               </form>
+            )}
+
+            {/* TAB 6: CLOUD SYNC & PERMANENT STORAGE */}
+            {activeTab === 'storage' && (
+              <div className="space-y-8 max-w-2xl">
+                <div>
+                  <h3 className="text-base font-bold text-white flex items-center gap-2">
+                    <Cloud className="w-5 h-5 text-sky-400" />
+                    <span>Permanent Cloud Storage & Auto-Sync</span>
+                  </h3>
+                  <p className="text-xs text-slate-400 mt-1">
+                    Keep your videos, downloads, settings, and changes permanent across all Vercel serverless restarts.
+                  </p>
+                </div>
+
+                {/* Status Indicator */}
+                <div className={`p-4 rounded-2xl border flex items-start gap-3 ${
+                  storageStatus.hasKV 
+                    ? 'bg-emerald-950/30 border-emerald-800 text-emerald-300'
+                    : storageStatus.hasGitHub 
+                    ? 'bg-sky-950/30 border-sky-800 text-sky-300'
+                    : 'bg-amber-950/30 border-amber-800 text-amber-300'
+                }`}>
+                  {storageStatus.hasKV || storageStatus.hasGitHub ? (
+                    <CheckCircle className="w-5 h-5 shrink-0 mt-0.5" />
+                  ) : (
+                    <AlertTriangle className="w-5 h-5 shrink-0 mt-0.5" />
+                  )}
+                  <div>
+                    <p className="text-xs font-bold uppercase tracking-wider">
+                      Current Storage Mode: {storageStatus.storageMode || (storageStatus.hasGitHub ? 'GitHub Auto-Sync' : (storageStatus.hasKV ? 'Vercel KV' : 'Serverless Local'))}
+                    </p>
+                    <p className="text-xs mt-1 opacity-90 leading-relaxed">
+                      {storageStatus.hasKV 
+                        ? 'Vercel KV is connected! All tutorial updates and edits are automatically saved to your cloud database in real-time.'
+                        : storageStatus.hasGitHub 
+                        ? 'GitHub Auto-Sync is active! Edits automatically commit directly to your GitHub repository and trigger permanent Vercel deployments.'
+                        : 'Running in ephemeral mode. Serverless restarts will reload the base repository data. Enter your GitHub Token below to enable 1-click permanent cloud auto-sync!'}
+                    </p>
+                  </div>
+                </div>
+
+                {/* Section 1: GitHub Cloud Auto-Sync */}
+                <form onSubmit={handleSyncGitHub} className="space-y-4 p-5 rounded-2xl bg-slate-950/60 border border-slate-800">
+                  <div className="flex items-center justify-between">
+                    <h4 className="text-xs font-bold text-white uppercase tracking-wider flex items-center gap-2">
+                      <GitBranch className="w-4 h-4 text-rose-400" />
+                      <span>Option 1: GitHub Auto-Sync (Recommended & Free)</span>
+                    </h4>
+                    <span className="text-[10px] font-mono text-slate-400 bg-slate-900 px-2 py-0.5 rounded border border-slate-800">
+                      Zero Extra Hosting Cost
+                    </span>
+                  </div>
+                  <p className="text-xs text-slate-400 leading-relaxed">
+                    By providing a GitHub Personal Access Token, every time you add, edit, or delete a video or setting in this dashboard, it commits directly to your GitHub repository (<span className="text-slate-200 font-mono">data/db.json</span>) so your changes are 100% permanent and automatically deployed to Vercel.
+                  </p>
+
+                  <div className="space-y-3 pt-2">
+                    <div>
+                      <label className="block text-xs font-semibold text-slate-300 mb-1">
+                        GitHub Repository
+                      </label>
+                      <input
+                        type="text"
+                        value={githubRepoInput}
+                        onChange={(e) => setGithubRepoInput(e.target.value)}
+                        placeholder="username/repo-name"
+                        className="w-full bg-slate-900 border border-slate-800 rounded-xl px-3.5 py-2 text-xs text-white font-mono focus:outline-none focus:border-rose-500"
+                      />
+                    </div>
+
+                    <div>
+                      <div className="flex items-center justify-between mb-1">
+                        <label className="block text-xs font-semibold text-slate-300">
+                          GitHub Personal Access Token (PAT)
+                        </label>
+                        <a
+                          href="https://github.com/settings/tokens/new?scopes=repo&description=JacquesTech+Resource+Hub"
+                          target="_blank"
+                          rel="noreferrer"
+                          className="text-[11px] text-rose-400 hover:text-rose-300 inline-flex items-center gap-1"
+                        >
+                          <span>Generate Token on GitHub</span>
+                          <ExternalLink className="w-3 h-3" />
+                        </a>
+                      </div>
+                      <input
+                        type="password"
+                        value={githubTokenInput}
+                        onChange={(e) => setGithubTokenInput(e.target.value)}
+                        placeholder="ghp_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+                        className="w-full bg-slate-900 border border-slate-800 rounded-xl px-3.5 py-2 text-xs text-white font-mono focus:outline-none focus:border-rose-500"
+                      />
+                      <p className="text-[11px] text-slate-500 mt-1">
+                        Requires a classic token with <span className="text-slate-300 font-mono">repo</span> scope or a fine-grained token with Contents read & write.
+                      </p>
+                    </div>
+
+                    {syncMsg.text && (
+                      <div className={`p-3 rounded-xl text-xs flex items-center gap-2 ${
+                        syncMsg.type === 'success' ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' : 'bg-rose-500/10 text-rose-400 border border-rose-500/20'
+                      }`}>
+                        {syncMsg.type === 'success' ? <Check className="w-4 h-4 shrink-0" /> : <AlertCircle className="w-4 h-4 shrink-0" />}
+                        <span>{syncMsg.text}</span>
+                      </div>
+                    )}
+
+                    <button
+                      type="submit"
+                      disabled={syncLoading}
+                      className="w-full sm:w-auto px-5 py-2.5 rounded-xl bg-rose-600 hover:bg-rose-500 text-white text-xs font-bold inline-flex items-center justify-center gap-2 transition-colors cursor-pointer shadow-md disabled:opacity-50"
+                    >
+                      <RefreshCw className={`w-3.5 h-3.5 ${syncLoading ? 'animate-spin' : ''}`} />
+                      <span>{syncLoading ? 'Connecting & Committing...' : 'Save Token & Sync to GitHub Now'}</span>
+                    </button>
+                  </div>
+                </form>
+
+                {/* Section 2: Vercel KV Setup Instructions */}
+                <div className="p-5 rounded-2xl bg-slate-950/60 border border-slate-800 space-y-3">
+                  <h4 className="text-xs font-bold text-white uppercase tracking-wider flex items-center gap-2">
+                    <Database className="w-4 h-4 text-emerald-400" />
+                    <span>Option 2: Vercel KV Storage (Realtime Cloud Database)</span>
+                  </h4>
+                  <p className="text-xs text-slate-400 leading-relaxed">
+                    If you prefer a direct cloud database with instant updates:
+                  </p>
+                  <ol className="list-decimal list-inside text-xs text-slate-300 space-y-1 pl-1">
+                    <li>Go to your <a href="https://vercel.com/dashboard" target="_blank" rel="noreferrer" className="text-rose-400 underline">Vercel Project Dashboard</a>.</li>
+                    <li>Click the <strong className="text-white">Storage</strong> tab at the top.</li>
+                    <li>Click <strong className="text-white">Create Database</strong> and select <strong className="text-white">KV (Powered by Upstash)</strong>.</li>
+                    <li>Click <strong className="text-white">Connect to Project</strong>. That's it! Vercel will automatically connect the cloud database.</li>
+                  </ol>
+                </div>
+
+                {/* Section 3: Manual Export / Import Backup */}
+                <div className="p-5 rounded-2xl bg-slate-950/60 border border-slate-800 space-y-3">
+                  <h4 className="text-xs font-bold text-white uppercase tracking-wider flex items-center gap-2">
+                    <HardDrive className="w-4 h-4 text-amber-400" />
+                    <span>Option 3: Manual Database Backup & Restore</span>
+                  </h4>
+                  <p className="text-xs text-slate-400 leading-relaxed">
+                    Download a full copy of your database file (<span className="font-mono text-slate-300">db.json</span>) to keep offline backups, or upload an updated file.
+                  </p>
+                  <div className="flex flex-wrap items-center gap-3 pt-1">
+                    <button
+                      type="button"
+                      onClick={handleExportDB}
+                      className="px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-semibold inline-flex items-center gap-2 border border-slate-700 transition-colors cursor-pointer"
+                    >
+                      <Download className="w-3.5 h-3.5 text-amber-400" />
+                      <span>Download Backup (db.json)</span>
+                    </button>
+
+                    <label className="px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-semibold inline-flex items-center gap-2 border border-slate-700 transition-colors cursor-pointer">
+                      <Upload className="w-3.5 h-3.5 text-sky-400" />
+                      <span>Upload & Restore (db.json)</span>
+                      <input
+                        type="file"
+                        accept=".json"
+                        onChange={handleImportDB}
+                        className="hidden"
+                      />
+                    </label>
+                  </div>
+                </div>
+              </div>
             )}
 
           </div>

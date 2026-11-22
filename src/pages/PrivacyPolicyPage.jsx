@@ -8,8 +8,8 @@ export default function PrivacyPolicyPage({ settings, monetization, onNavigate }
     window.scrollTo(0, 0);
   }, []);
 
-  const siteTitle = settings?.siteTitle || 'Creator Resource Hub';
-  const creatorName = settings?.creatorName || 'Creator';
+  const siteTitle = settings?.siteTitle || 'jacquestech';
+  const creatorName = settings?.creatorName || 'Jacques';
   const siteUrl = window.location.origin;
 
   return (

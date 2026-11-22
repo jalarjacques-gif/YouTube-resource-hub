@@ -78,7 +78,7 @@ export default function ContactPage({ settings, monetization, onNavigate }) {
               <div className="p-5 rounded-2xl bg-slate-950/80 border border-slate-800 space-y-2 text-xs">
                 <p className="font-bold text-white uppercase tracking-wider text-[11px]">Direct Channels</p>
                 <p className="text-slate-400">YouTube: <span className="text-rose-400">{channelName}</span></p>
-                <p className="text-slate-400">Website: <span className="text-slate-300">Creator Resource Hub</span></p>
+                <p className="text-slate-400">Website: <span className="text-slate-300">{settings?.siteTitle || 'jacquestech'}</span></p>
               </div>
             </div>
 

@@ -242,14 +242,18 @@ export default function App() {
           </div>
         ) : (
           <div className="text-center py-16 px-4 border border-dashed border-slate-800 rounded-3xl bg-slate-900/40">
-            <div className="w-12 h-12 rounded-2xl bg-slate-800/80 flex items-center justify-center mx-auto text-slate-400 mb-3">
-              <Search className="w-6 h-6" />
+            <div className="w-12 h-12 rounded-2xl bg-slate-800/80 flex items-center justify-center mx-auto text-rose-400 mb-3">
+              <Sparkles className="w-6 h-6" />
             </div>
-            <h3 className="text-base font-bold text-white">No resources found</h3>
+            <h3 className="text-base font-bold text-white">
+              {videos.length === 0 ? "New Tutorials & Code Coming Soon" : "No resources found"}
+            </h3>
             <p className="text-xs text-slate-400 max-w-sm mx-auto mt-1">
-              No videos or downloadable files match your current category or search criteria.
+              {videos.length === 0
+                ? "Official companion code, starter kits, and cheat sheets will appear here as new videos are published."
+                : "No videos or downloadable files match your current category or search criteria."}
             </p>
-            {(searchQuery || selectedCategory !== 'All') && (
+            {videos.length > 0 && (searchQuery || selectedCategory !== 'All') && (
               <button
                 onClick={() => {
                   setSearchQuery('');

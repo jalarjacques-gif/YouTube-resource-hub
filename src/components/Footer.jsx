@@ -27,7 +27,7 @@ export default function Footer({ settings, onNavigate }) {
                 <YoutubeIcon className="w-5 h-5 text-white" />
               </div>
               <div>
-                <p className="font-bold text-white text-base leading-none">{settings?.siteTitle || 'Creator Resource Hub'}</p>
+                <p className="font-bold text-white text-base leading-none">{settings?.siteTitle || 'jacquestech'}</p>
                 <p className="text-xs text-slate-500 mt-1">Official companion downloads for YouTube tutorials</p>
               </div>
             </div>
@@ -141,7 +141,7 @@ export default function Footer({ settings, onNavigate }) {
 
         {/* Bottom Disclaimer & Copyright */}
         <div className="pt-6 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-slate-500">
-          <p>© {currentYear} {settings?.siteTitle || 'Creator Resource Hub'}. All rights reserved.</p>
+          <p>© {currentYear} {settings?.siteTitle || 'jacquestech'}. All rights reserved.</p>
           <p className="flex items-center gap-1 text-[11px]">
             <span>Empowering developers & learners</span>
             <Heart className="w-3 h-3 text-rose-500 fill-current" />

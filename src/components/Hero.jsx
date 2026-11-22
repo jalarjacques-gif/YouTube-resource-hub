@@ -30,13 +30,13 @@ export default function Hero({ settings, categories, selectedCategory, onSelectC
               />
             ) : (
               <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-2xl bg-gradient-to-tr from-rose-600 to-amber-600 flex items-center justify-center font-bold text-2xl text-white">
-                {settings?.creatorName?.charAt(0) || 'C'}
+                {settings?.creatorName?.charAt(0) || 'J'}
               </div>
             )}
             <div>
               <div className="flex items-center justify-center md:justify-start gap-2">
                 <h1 className="text-2xl sm:text-3xl font-extrabold text-white tracking-tight">
-                  {settings?.creatorName || 'Alex Rivera'}
+                  {settings?.creatorName || 'Jacques'}
                 </h1>
                 {settings?.channelUrl && (
                   <a
@@ -45,13 +45,13 @@ export default function Hero({ settings, categories, selectedCategory, onSelectC
                     rel="noreferrer"
                     className="text-xs text-rose-400 hover:text-rose-300 font-mono bg-rose-500/10 px-2 py-0.5 rounded-md inline-flex items-center gap-1 border border-rose-500/20"
                   >
-                    <span>{settings.channelName || '@Channel'}</span>
+                    <span>{settings.channelName || '@jacquestech'}</span>
                     <ExternalLink className="w-3 h-3" />
                   </a>
                 )}
               </div>
               <p className="text-slate-400 text-sm max-w-xl mt-1.5">
-                {settings?.bio || 'Grab all project files, PDFs, source codes, and companion cheat sheets for my YouTube tutorials.'}
+                {settings?.bio || 'Grab all project starter kits, PDFs, source codes, and companion cheat sheets for jacquestech tutorials.'}
               </p>
             </div>
           </div>

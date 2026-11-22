@@ -8,7 +8,7 @@ export default function TermsPage({ settings, monetization, onNavigate }) {
     window.scrollTo(0, 0);
   }, []);
 
-  const siteTitle = settings?.siteTitle || 'Creator Resource Hub';
+  const siteTitle = settings?.siteTitle || 'jacquestech';
 
   return (
     <div className="min-h-screen flex flex-col bg-slate-950 text-slate-100 selection:bg-rose-500 selection:text-white">

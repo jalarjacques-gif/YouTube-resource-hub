@@ -9,9 +9,9 @@ export default function AboutPage({ settings, monetization, onNavigate }) {
     window.scrollTo(0, 0);
   }, []);
 
-  const creatorName = settings?.creatorName || 'Alex Rivera';
-  const channelName = settings?.channelName || '@Creator';
-  const siteTitle = settings?.siteTitle || 'Creator Resource Hub';
+  const creatorName = settings?.creatorName || 'Jacques';
+  const channelName = settings?.channelName || '@jacquestech';
+  const siteTitle = settings?.siteTitle || 'jacquestech';
 
   return (
     <div className="min-h-screen flex flex-col bg-slate-950 text-slate-100 selection:bg-rose-500 selection:text-white">
